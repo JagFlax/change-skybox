@@ -11,37 +11,42 @@ ArrayList g_hSkyNames;
 
 #define FILEPATH_SKYCONFIG "configs/skynames.txt"
 
-public Plugin myinfo = {
+public Plugin myinfo = 
+{
 	name = "Change your Sky",
 	author = "Saturn34",
 	description = "Lets players replace the current map's skybox to the a desired sky texture.",
-	version = "0.1",
-	url = "https://sourcemod.net/"
+	version = "1.0",
+	url = "https://github.com/Saturn34/"
 };
 
-public void OnPluginStart() {
-	// Add valid sky names to arraylist
+public void OnPluginStart()
+{
 	LoadSkyConfigs();
 
+	// Faster to call FindConVar() once than everytime sky needs to be changed
 	sv_skyname = FindConVar("sv_skyname");
 
-	if (sv_skyname == null) {
+	if (sv_skyname == null)
 		ThrowError("sv_skyname is not a valid server console variable");
-	}
 
-	// show menu upon incorrect command arguments?
+	// ConVars
 	sv_skychange_showmenu = CreateConVar("sv_skychange_showmenu", "1", "When a sky name is not found, display the sky changing menu to player", 0, true, 0.0, true, 1.0);
 
+	// Commands
 	RegConsoleCmd("sm_skybox", Cmd_ChangeMySkybox, "Change the skybox of the current map to any valid existing sky name");
 	RegConsoleCmd("sm_skyname", Cmd_ChangeMySkybox, "Change the skybox of the current map to any valid existing sky name");
 	RegConsoleCmd("sm_sky", Cmd_ChangeMySkybox, "Change the skybox of the current map to any valid existing sky name");
 }
 
-public Action Cmd_ChangeMySkybox(int client, int args) {
+public Action Cmd_ChangeMySkybox(int client, int args)
+{
 	char sSkyName[64];
 	GetCmdArg(1, sSkyName, sizeof(sSkyName));
-	if (args != 1) {
+	if (args != 1)
+	{
 		ReplyToCommand(client, "[SM] Usage: sm_sky <skyname>");
+
 		// Bring up the menu when no arguments are specified
 		OpenChangeSkyMenu(client, true);
 		return Plugin_Handled;
@@ -49,8 +54,10 @@ public Action Cmd_ChangeMySkybox(int client, int args) {
 
 	ReplaceString(sSkyName, sizeof(sSkyName), "\\", "/");
 
-	if (!IsStringValidSkyName(sSkyName)) {
+	if (!IsStringValidSkyName(sSkyName))
+	{
 		ReplyToCommand(client, "[SM] Sky name \"%s\" is not found in the sky list.", sSkyName);
+		
 		OpenChangeSkyMenu(client, true);
 		return Plugin_Handled;
 	}
@@ -60,52 +67,60 @@ public Action Cmd_ChangeMySkybox(int client, int args) {
 	return Plugin_Handled;
 }
 
-bool IsStringValidSkyName(char[] sky) {
+// Tests to see if a string is in sky name arraylist
+bool IsStringValidSkyName(char[] sky)
+{
 	char sValidSky[64];
-	for (int i = 0; i < g_hSkyNames.Length; i++) {
+	for (int i = 0; i < g_hSkyNames.Length; i++)
+	{
 		g_hSkyNames.GetString(i, sValidSky, sizeof(sValidSky));
-		if (StrEqual(sky, sValidSky, false)) {
+
+		if (StrEqual(sky, sValidSky, false))
 			return true;
-		}
 	}
 	return false;
 }
 
-// Load sky names into arraylist line-by-line from file skynames.txt
-void LoadSkyConfigs() {
-	char skyFilePath[PLATFORM_MAX_PATH];
-	BuildPath(Path_SM, skyFilePath, sizeof(skyFilePath), FILEPATH_SKYCONFIG);
+// Loads sky names into arraylist line-by-line from file skynames.txt
+void LoadSkyConfigs()
+{
+	char sSkyFilePath[PLATFORM_MAX_PATH];
+	BuildPath(Path_SM, sSkyFilePath, sizeof(sSkyFilePath), FILEPATH_SKYCONFIG);
 
-	// Let each member of array hold 65 bytes, converting them to cell type for parameter)
+	// Let each member of array hold 65 bytes, converting them to cell type for parameter
 	g_hSkyNames = new ArrayList(ByteCountToCells(65));
 
-	Handle file = OpenFile(skyFilePath, "r");
-	if (file == null) {
-		LogError("Could not open file: %s", skyFilePath);
+	Handle file = OpenFile(sSkyFilePath, "r");
+	if (file == null)
+	{
+		LogError("Could not open file: %s", sSkyFilePath);
 		return;
 	}
 	
 	char sLine[64];
-	while (!IsEndOfFile(file) && ReadFileLine(file, sLine, sizeof(sLine))) {
+	while (!IsEndOfFile(file) && ReadFileLine(file, sLine, sizeof(sLine)))
+	{
 		TrimString(sLine);
 		
-		// Ignore lines that start with // or is an empty line
-		if (sLine[0] == '\0'  || (sLine[0] == '/' && sLine[1] == '/')) {
+		// Ignore lines that are empty or start with "//"
+		if (sLine[0] == '\0'  || (sLine[0] == '/' && sLine[1] == '/'))
 			continue;
-		}
 
 		ReplaceString(sLine, sizeof(sLine), "\\", "/");
+
 		g_hSkyNames.PushString(sLine);
 	}
 }
 
-void OpenChangeSkyMenu(int client, bool foundNoSky = false) {
-	if (foundNoSky && !sv_skychange_showmenu.IntValue) {
+void OpenChangeSkyMenu(int client, bool foundNoSky = false)
+{
+	if (foundNoSky && !sv_skychange_showmenu.IntValue) 
 		return;
-	}
 
 	// No skies found in list, cancel menu
-	if (g_hSkyNames.Length == 0) {
+	if (g_hSkyNames.Length == 0)
+	{
+		ReplyToCommand(client, "[SM] There are no skynames setup.");
 		ThrowError("No skies found in %s", FILEPATH_SKYCONFIG);
 		return;
 	}
@@ -114,7 +129,8 @@ void OpenChangeSkyMenu(int client, bool foundNoSky = false) {
 	hChangeSky.SetTitle("Change your sky:");
 
 	char sValidSky[64];
-	for (int i = 0; i < g_hSkyNames.Length; i++) {
+	for (int i = 0; i < g_hSkyNames.Length; i++)
+	{
 		g_hSkyNames.GetString(i, sValidSky, sizeof(sValidSky));
 		hChangeSky.AddItem(sValidSky, sValidSky);
 	}
@@ -124,18 +140,18 @@ void OpenChangeSkyMenu(int client, bool foundNoSky = false) {
 	return;
 }
 
-public int Menu_ChangeSky(Handle menu, MenuAction action, int client, int param2) {
-	switch (action) {
-		case MenuAction_Select: {
+public int Menu_ChangeSky(Handle menu, MenuAction action, int client, int param2)
+{
+	switch (action)
+	{
+		case MenuAction_Select:
+		{
 			char sSkyName[64];
 			GetMenuItem(menu, param2, sSkyName, sizeof(sSkyName));
 			SendConVarValue(client, sv_skyname, sSkyName);
 			ReplyToCommand(client, "[SM] Your skybox has been changed to %s", sSkyName);
 		}
-		case MenuAction_End: {
+		case MenuAction_End:
 			delete menu;
-		}
 	}
 }
-
-
