@@ -20,6 +20,7 @@ sky_tf2_04
 sky_trainyard_01
 sky_upward
 sky_well_01
+sky_rainbow_01
 
 // hl2
 sky_day01_01
