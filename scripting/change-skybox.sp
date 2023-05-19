@@ -39,9 +39,18 @@ public void OnPluginStart()
 	sv_skychange_showmenu = CreateConVar("sv_skychange_showmenu", "1", "When a sky name is not found, display the sky changing menu to player", 0, true, 0.0, true, 1.0);
 
 	// Commands
+	RegAdminCmd("sm_reloadskynames", Cmd_ReloadSkyConfig, ADMFLAG_CONFIG);
+	
 	RegConsoleCmd("sm_skybox", Cmd_ChangeMySkybox, CONCMD_SKY_DESCRIPTION);
 	RegConsoleCmd("sm_skyname", Cmd_ChangeMySkybox, CONCMD_SKY_DESCRIPTION);
 	RegConsoleCmd("sm_sky", Cmd_ChangeMySkybox, CONCMD_SKY_DESCRIPTION);
+}
+
+public Action Cmd_ReloadSkyConfig(int client, int args)
+{
+	ReadSkyConfig();
+	ReplyToCommand(client, "[SM] Successfully reloaded %s and found %d skies", FILEPATH_SKYCONFIG, g_hSkyNames.Length);
+	return Plugin_Handled;
 }
 
 public Action Cmd_ChangeMySkybox(int client, int args)
