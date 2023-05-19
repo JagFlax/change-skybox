@@ -15,16 +15,19 @@ public Plugin myinfo =
 {
 	name = "Change your Sky",
 	author = "Saturn34",
-	description = "Lets players replace the current map's skybox to the a desired sky texture.",
+	description = "Lets players replace the current map's skybox to their desired sky texture.",
 	version = "1.0",
 	url = "https://github.com/Saturn34/"
 };
 
 public void OnPluginStart()
 {
+	if (GetEngineVersion() != Engine_TF2)
+		SetFailState("This plugin only works on Team Fortress 2.");
+
 	LoadSkyConfigs();
 
-	// Faster to call FindConVar() once than everytime sky needs to be changed
+	// Cache ConVar into global variable, as its faster to call FindConVar() only once rather than everytime the sky needs to be changed
 	sv_skyname = FindConVar("sv_skyname");
 
 	if (sv_skyname == null)
@@ -154,4 +157,6 @@ public int Menu_ChangeSky(Handle menu, MenuAction action, int client, int param2
 		case MenuAction_End:
 			delete menu;
 	}
+
+	return 0;
 }
