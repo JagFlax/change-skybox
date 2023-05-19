@@ -11,13 +11,15 @@ ArrayList g_hSkyNames;
 
 #define FILEPATH_SKYCONFIG "configs/skynames.txt"
 
+#define CONCMD_SKY_DESCRIPTION "Change the skybox of the current map to any valid existing sky name"
+
 public Plugin myinfo = 
 {
-	name = "Change your Sky",
+	name = "Client-Side Sky Changer",
 	author = "Saturn34",
-	description = "Lets players replace the current map's skybox to their desired sky texture.",
+	description = "Lets players replace the current map's skybox to their desired sky texture",
 	version = "1.0",
-	url = "https://github.com/Saturn34/"
+	url = "https://github.com/Saturn34/change-skybox"
 };
 
 public void OnPluginStart()
@@ -25,7 +27,7 @@ public void OnPluginStart()
 	if (GetEngineVersion() != Engine_TF2)
 		SetFailState("This plugin only works on Team Fortress 2.");
 
-	LoadSkyConfigs();
+	ReadSkyConfig();
 
 	// Cache ConVar into global variable, as its faster to call FindConVar() only once rather than everytime the sky needs to be changed
 	sv_skyname = FindConVar("sv_skyname");
@@ -37,9 +39,9 @@ public void OnPluginStart()
 	sv_skychange_showmenu = CreateConVar("sv_skychange_showmenu", "1", "When a sky name is not found, display the sky changing menu to player", 0, true, 0.0, true, 1.0);
 
 	// Commands
-	RegConsoleCmd("sm_skybox", Cmd_ChangeMySkybox, "Change the skybox of the current map to any valid existing sky name");
-	RegConsoleCmd("sm_skyname", Cmd_ChangeMySkybox, "Change the skybox of the current map to any valid existing sky name");
-	RegConsoleCmd("sm_sky", Cmd_ChangeMySkybox, "Change the skybox of the current map to any valid existing sky name");
+	RegConsoleCmd("sm_skybox", Cmd_ChangeMySkybox, CONCMD_SKY_DESCRIPTION);
+	RegConsoleCmd("sm_skyname", Cmd_ChangeMySkybox, CONCMD_SKY_DESCRIPTION);
+	RegConsoleCmd("sm_sky", Cmd_ChangeMySkybox, CONCMD_SKY_DESCRIPTION);
 }
 
 public Action Cmd_ChangeMySkybox(int client, int args)
@@ -85,8 +87,13 @@ bool IsStringValidSkyName(char[] sky)
 }
 
 // Loads sky names into arraylist line-by-line from file skynames.txt
-void LoadSkyConfigs()
+void ReadSkyConfig()
 {
+	if (g_hSkyNames != null)
+	{
+		delete g_hSkyNames;
+	}
+
 	char sSkyFilePath[PLATFORM_MAX_PATH];
 	BuildPath(Path_SM, sSkyFilePath, sizeof(sSkyFilePath), FILEPATH_SKYCONFIG);
 
