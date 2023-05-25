@@ -9,6 +9,8 @@ ConVar sv_skychange_showmenu;
 
 ArrayList g_hSkyNames;
 
+char g_sCurrentSky[MAXPLAYERS][64];
+
 #define FILEPATH_SKYCONFIG "configs/skynames.txt"
 
 #define CONCMD_SKY_DESCRIPTION "Change the skybox of the current map to any valid existing sky name"
@@ -44,6 +46,28 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_skybox", Cmd_ChangeMySkybox, CONCMD_SKY_DESCRIPTION);
 	RegConsoleCmd("sm_skyname", Cmd_ChangeMySkybox, CONCMD_SKY_DESCRIPTION);
 	RegConsoleCmd("sm_sky", Cmd_ChangeMySkybox, CONCMD_SKY_DESCRIPTION);
+
+	// During late load, get the player's current sky
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (IsClientInGame(i))
+		{
+			QueryClientConVar(i, "sv_skyname", ConVarQueryFinished_Skyname);
+		}
+	}
+}
+
+public void OnClientAuthorized(int client)
+{
+	QueryClientConVar(client, "sv_skyname", ConVarQueryFinished_Skyname);
+}
+
+public void ConVarQueryFinished_Skyname(QueryCookie cookie, int client, ConVarQueryResult result, char[] cvarName, char[] cvarValue) 
+{
+	if (IsClientInGame(client))
+	{
+		strcopy(g_sCurrentSky[client], sizeof(g_sCurrentSky[]), cvarValue);
+	}
 }
 
 public Action Cmd_ReloadSkyConfig(int client, int args)
@@ -131,7 +155,7 @@ void ReadSkyConfig()
 	}
 }
 
-void OpenChangeSkyMenu(int client, bool foundNoSky = false)
+void OpenChangeSkyMenu(int client, bool foundNoSky = false, int selectionPosition = 0)
 {
 	if (foundNoSky && !sv_skychange_showmenu.IntValue) 
 		return;
@@ -150,12 +174,21 @@ void OpenChangeSkyMenu(int client, bool foundNoSky = false)
 	char sValidSky[64];
 	for (int i = 0; i < g_hSkyNames.Length; i++)
 	{
-		g_hSkyNames.GetString(i, sValidSky, sizeof(sValidSky));
-		hChangeSky.AddItem(sValidSky, sValidSky);
+		g_hSkyNames.GetString(i, sValidSky, sizeof(sValidSky)); 
+		
+		// highlight current sky and prevent it from being selected
+		if (StrEqual(g_sCurrentSky[client], sValidSky, false))
+		{
+			hChangeSky.AddItem(sValidSky, sValidSky, ITEMDRAW_DISABLED);
+		}
+		else // not the current sky, allow it to be selectable
+		{
+			hChangeSky.AddItem(sValidSky, sValidSky, ITEMDRAW_DEFAULT);
+		}
 	}
 
 	hChangeSky.ExitButton = true;
-	hChangeSky.Display(client, MENU_TIME_FOREVER);
+	hChangeSky.DisplayAt(client, selectionPosition, MENU_TIME_FOREVER);
 	return;
 }
 
@@ -168,7 +201,12 @@ public int Menu_ChangeSky(Handle menu, MenuAction action, int client, int param2
 			char sSkyName[64];
 			GetMenuItem(menu, param2, sSkyName, sizeof(sSkyName));
 			SendConVarValue(client, sv_skyname, sSkyName);
-			ReplyToCommand(client, "[SM] Your skybox has been changed to %s", sSkyName);
+			ReplyToCommand(client, "[SM] Your skybox has been changed to: %s", sSkyName);
+
+			strcopy(g_sCurrentSky[client], sizeof(g_sCurrentSky[]), sSkyName);
+
+			// Keep menu open on current page
+			OpenChangeSkyMenu(client, true, GetMenuSelectionPosition());
 		}
 		case MenuAction_End:
 			delete menu;
