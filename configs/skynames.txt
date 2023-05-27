@@ -24,3 +24,27 @@ sky_rainbow_01
 
 // hl2
 sky_day01_01
+sky_day01_04
+sky_day01_05
+sky_day01_06
+sky_day01_07
+sky_day01_08
+sky_day01_09
+sky_day02_01
+sky_day02_02
+sky_day02_03
+sky_day02_04
+sky_day02_05
+sky_day02_06
+sky_day02_07
+sky_day02_09
+sky_day02_10
+sky_day03_01
+sky_day03_02
+sky_day03_03
+sky_day03_04
+sky_day03_05
+sky_day03_06
+sky_day03_06b
+sky_wasteland02
+sky_borealis01
